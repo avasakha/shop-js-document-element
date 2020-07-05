@@ -31,7 +31,9 @@ function ProductList() {
     this.remove = function (title) {
         const { records } = this
         const index = records.findIndex(key => key.title === title);
-        index !== -1 ? records.splice(index, 1) : records
+        if (index !== -1) { // If statement is a better choice.
+            records.splice(index, 1)
+        }
 
     }
 
@@ -78,8 +80,9 @@ function ElementBuilder(name) {
         return this.element;
     }
 
-    this.srcg = function (num1, num2) {
-        this.element.setAttribute(num1, num2)
+    // What does it mean?! `srcg` ?
+    this.srcg = function (attributeName, attributeValue) {
+        this.element.setAttribute(attributeName, attributeValue)
         return this
     }
 
@@ -93,7 +96,7 @@ const builder = {
 
 const getter = {
     create: function (name) {
-        return document.getElementsByClassName(name)
+        return document.querySelector(`.${name}`)
     }
 }
 
@@ -107,37 +110,37 @@ const clearCart = getter.create("clear-cart")
 
 const total = () => {
     const total = shop.productslist.totalPrice()
-    cartTotal[0].innerHTML = total
+    cartTotal.innerHTML = total
 }
 
 
 const show = () => {
 
-    cartOver[0].setAttribute('class', ' cart-overlay transparentBcg ')
-    cart[0].setAttribute('class', ' cart showCart')
+    cartOver.setAttribute('class', ' cart-overlay transparentBcg ')
+    cart.setAttribute('class', ' cart showCart')
 }
 
 
 
 const hide = () => {
 
-    cartOver[0].setAttribute('class', ' cart-overlay ')
-    cart[0].setAttribute('class', ' cart ')
+    cartOver.setAttribute('class', ' cart-overlay ')
+    cart.setAttribute('class', ' cart ')
 }
 
 
 const counter = () => {
     const countProduct = shop.productslist.records.reduce((sum, current) => sum += current.count, 0)
-    cartItems[0].textContent = countProduct
+    cartItems.textContent = countProduct
 }
 
 
 
-clearCart[0].addEventListener('click', () => {
+clearcart.addEventListener('click', () => {
     shop.productslist.records.splice(0)
-    cartContent[0].innerHTML = ''
+    cartContent.innerHTML = ''
     hide();
-    cartItems[0].textContent = 0;
+    cartItems.textContent = 0;
 
 })
 
@@ -145,10 +148,10 @@ clearCart[0].addEventListener('click', () => {
 fetch('http://localhost:3000/items')
     .then(res => res.json())
     .then(res => {
-        res.map(item => {
+        res.forEach(item => {
             const article = builder.create('article')
                 .className('product')
-                .appendTo(imgContainer[0])
+                .appendTo(imgContainer)
 
             const div = builder.create('div')
                 .className("img-container")
@@ -163,7 +166,7 @@ fetch('http://localhost:3000/items')
                 .className('bag-btn')
                 .appendTo(div)
                 .onclick(() => {
-                    cartContent[0].innerHTML = ''
+                    cartContent.innerHTML = ''
                     shop.productslist
                         .add(item.fields.image.fields.file.url, item.fields.price, item.fields.title, 1)
                     shop.init()
@@ -210,7 +213,7 @@ function Painter(cartContent) {
 
             const cartItem = builder.create('div')
                 .className('cart-item')
-                .appendTo(cartContent[0])
+                .appendTo(cartContent)
 
 
             builder.create('img')
@@ -233,7 +236,7 @@ function Painter(cartContent) {
                 .text('remove')
                 .appendTo(div2).onclick(() => {
                     productslist.remove(item.title);
-                    cartContent[0].innerHTML = ''
+                    cartContent.innerHTML = ''
                     shop.init()
                     counter()
                 })
@@ -245,7 +248,7 @@ function Painter(cartContent) {
                 .className('fa fa-chevron-up')
                 .appendTo(div1).onclick(() => {
                     item.count += 1
-                    cartContent[0].innerHTML = ''
+                    cartContent.innerHTML = ''
                     shop.init();
                     total();
                     counter();
@@ -263,14 +266,14 @@ function Painter(cartContent) {
                 .appendTo(div1).onclick(() => {
                     if (item.count <= 1) {
                         productslist.remove(item.title);
-                        cartContent[0].innerHTML = ''
+                        cartContent.innerHTML = ''
                         shop.init()
 
                     }
                     else {
                         item.count -= 1
                     }
-                    cartContent[0].innerHTML = ''
+                    cartContent.innerHTML = ''
                     shop.init();
                     total()
                     counter()
