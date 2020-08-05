@@ -1,10 +1,10 @@
 
-function Products(image, price, title,count) {
+function Products(image, price, title, count) {
 
     this.image = image;
     this.price = price;
     this.title = title;
-    this.count=count
+    this.count = count
 
 
 }
@@ -12,34 +12,34 @@ function Products(image, price, title,count) {
 
 function ProductList() {
     this.records = [];
-    this.add = function (image, price, title,count) {
-        const {records}=this;
-        let productExit=false;
-        const record = new Products(image, price, title,count);
-        records.forEach(item=>{
-            if(item.title===record.title){
+    this.add = function (image, price, title, count) {
+        const { records } = this;
+        let productExit = false;
+        const record = new Products(image, price, title, count);
+        records.forEach(item => {
+            if (item.title === record.title) {
                 productExit = true
-                item.count+=1
+                item.count += 1
             }
         })
-        if(!productExit){
-            records.push({...record})
+        if (!productExit) {
+            records.push({ ...record })
         }
 
-}
+    }
 
     this.remove = function (title) {
-        const {records}=this
+        const { records } = this
         const index = records.findIndex(key => key.title === title);
-       index !== -1 ? records.splice(index, 1) : records
-       
+        index !== -1 ? records.splice(index, 1) : records
+
     }
 
     this.totalPrice = function () {
-        const {records}=this
-      return  records.reduce((sum,current)=>sum + current.price* current.count,0)
- 
-}
+        const { records } = this
+        return records.reduce((sum, current) => sum + current.price * current.count, 0)
+
+    }
 
 }
 
@@ -52,7 +52,7 @@ function ElementBuilder(name) {
         return this;
     }
 
-this.appendTo = function (parent) {
+    this.appendTo = function (parent) {
         if (parent instanceof ElementBuilder) {
             parent
                 .build()
@@ -64,7 +64,7 @@ this.appendTo = function (parent) {
         return this;
     }
 
-this.className = function (className) {
+    this.className = function (className) {
         this.element.className = className;
         return this;
     }
@@ -91,19 +91,56 @@ const builder = {
     }
 }
 
-const getter={
-    create:function(name){
+const getter = {
+    create: function (name) {
         return document.getElementsByClassName(name)
     }
 }
-let counter = 0
+
 const cartOver = getter.create("cart-overlay")
 const cart = getter.create("cart")
 const cartContent = getter.create("cart-content")
-const cartItems =getter.create("cart-items")
+const cartItems = getter.create("cart-items")
 const imgContainer = getter.create("products-center")
 const cartTotal = getter.create("cart-total")
-const clearCart=getter.create("clear-cart")
+const clearCart = getter.create("clear-cart")
+
+const total = () => {
+    const total = shop.productslist.totalPrice()
+    cartTotal[0].innerHTML = total
+}
+
+
+const show = () => {
+
+    cartOver[0].setAttribute('class', ' cart-overlay transparentBcg ')
+    cart[0].setAttribute('class', ' cart showCart')
+}
+
+
+
+const hide = () => {
+
+    cartOver[0].setAttribute('class', ' cart-overlay ')
+    cart[0].setAttribute('class', ' cart ')
+}
+
+
+const counter = () => {
+    const countProduct = shop.productslist.records.reduce((sum, current) => sum += current.count, 0)
+    cartItems[0].textContent = countProduct
+}
+
+
+
+clearCart[0].addEventListener('click', () => {
+    shop.productslist.records.splice(0)
+    cartContent[0].innerHTML = ''
+    hide();
+    cartItems[0].textContent = 0;
+
+})
+
 
 fetch('http://localhost:3000/items')
     .then(res => res.json())
@@ -128,12 +165,11 @@ fetch('http://localhost:3000/items')
                 .onclick(() => {
                     cartContent[0].innerHTML = ''
                     shop.productslist
-                    .add(item.fields.image.fields.file.url, item.fields.price, item.fields.title,1)
+                        .add(item.fields.image.fields.file.url, item.fields.price, item.fields.title, 1)
                     shop.init()
-                    const total = shop.productslist.totalPrice()
-                    cartTotal[0].innerHTML = total
-                    counter += 1
-                    cartItems[0].textContent = counter
+                    total()
+                    counter()
+
                 })
             builder.create('i')
                 .className("fa  fa-cart-plus")
@@ -156,24 +192,9 @@ fetch('http://localhost:3000/items')
     })
 
 
-const show = () => {
-
-    cartOver[0].setAttribute('class', ' cart-overlay transparentBcg ')
-    cart[0].setAttribute('class', ' cart showCart')
-}
-
-const hide = () => {
-
-    cartOver[0].setAttribute('class', ' cart-overlay ')
-    cart[0].setAttribute('class', ' cart ')
-}
 
 
-clearCart[0].addEventListener('click',()=>{
-    hide();
-    cartItems[0].textContent =0;
-    
-})
+
 
 
 
@@ -184,9 +205,9 @@ function Painter(cartContent) {
     this.productslist = new ProductList()
     this.cartContent = cartContent;
     this.init = function () {
-        const {productslist}=this
+        const { productslist } = this
         productslist.records.map(item => {
-            
+
             const cartItem = builder.create('div')
                 .className('cart-item')
                 .appendTo(cartContent[0])
@@ -213,7 +234,8 @@ function Painter(cartContent) {
                 .appendTo(div2).onclick(() => {
                     productslist.remove(item.title);
                     cartContent[0].innerHTML = ''
-                     shop.init()
+                    shop.init()
+                    counter()
                 })
 
             const div1 = builder.create('div')
@@ -221,12 +243,12 @@ function Painter(cartContent) {
 
             builder.create('i')
                 .className('fa fa-chevron-up')
-                .appendTo(div1).onclick(()=>{
-                    item.count+=1
+                .appendTo(div1).onclick(() => {
+                    item.count += 1
                     cartContent[0].innerHTML = ''
                     shop.init();
-                    const total = productslist.totalPrice()
-                    cartTotal[0].innerHTML = total
+                    total();
+                    counter();
                 })
 
 
@@ -238,12 +260,20 @@ function Painter(cartContent) {
 
             builder.create('i')
                 .className('fa fa-chevron-down')
-                .appendTo(div1).onclick(()=>{
-                    item.count-=1
+                .appendTo(div1).onclick(() => {
+                    if (item.count <= 1) {
+                        productslist.remove(item.title);
+                        cartContent[0].innerHTML = ''
+                        shop.init()
+
+                    }
+                    else {
+                        item.count -= 1
+                    }
                     cartContent[0].innerHTML = ''
                     shop.init();
-                    const total = productslist.totalPrice()
-                    cartTotal[0].innerHTML = total
+                    total()
+                    counter()
                 })
 
         })
